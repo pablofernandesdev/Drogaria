@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui"
+	template="/templates/modeloSistema.xhtml">
+
+	<ui:define name="menu">
+		<ui:include src="/include/menuPrincipal.xhtml" />
+	</ui:define>
+ 
+	<ui:define name="conteudo">
+		<h:form id="frmFabListagem">
+			<p:dataTable id="tblFabricantes" widgetVar="tabelaFabricantes"
+				emptyMessage="Nenhum registro encontrado."
+				value="#{MBFabricante.itens}" var="item" filteredValue="#{MBFabricante.itensFiltrados}" paginator="true" rows="10">
+				<!-- paginator = paginacao, rows= numero de corte de linhas por pagina -->
+				
+				<f:facet name="header">
+					Fabricante - Listagem
+				</f:facet>
+				
+				<p:column headerText="Código" sortBy="#{item.codigo}"
+					filterBy="#{item.codigo}">
+					<!-- sortBy = ordenação -->
+					<h:outputText value="#{item.codigo}" />
+				</p:column>
+
+				<p:column headerText="Descrição" sortBy="#{item.descricao}"
+					filterBy="#{item.descricao}">
+					<!-- filterBy = filtra uma busca -->
+					<h:outputText value="#{item.descricao}" />
+				</p:column>
+				
+				<p:column headerText="Opções">
+					<p:commandButton icon="ui-icon-trash" 
+									 oncomplete="PF('dlgFabExcluir').show();"
+									 update=":frmFabExcluir:pnlFabExcluir">
+									 <f:setPropertyActionListener target="#{MBFabricante.fabricante}" value="#{item}" />
+					</p:commandButton>
+					<p:commandButton icon="ui-icon-pencil" 
+									 oncomplete="PF('dlgFabEditar').show();"
+									 update=":frmFabEditar:pnlFabEditar">
+									 <f:setPropertyActionListener target="#{MBFabricante.fabricante}" value="#{item}" />
+					</p:commandButton>
+				
+				</p:column>
+				
+				<f:facet name="footer">
+					<p:commandButton value="Novo"
+						actionListener="#{MBFabricante.prepararNovo}"
+						oncomplete="PF('dlgFabNovo').show();"
+						update=":frmFabNovo:pnlFabNovo" /><!-- abre o botao novo, oncomplete = depois que chamar o preparar novo -->	
+				</f:facet>
+			</p:dataTable>
+		
+		</h:form>
+		<p:dialog widgetVar="dlgFabNovo" closable="false" draggable="false"
+			resizable="false" modal="true" header="Fabricante - Novo"
+			appendTo="@(body)"><!-- widgetvar = abre e fecha a janela, closable = x pra fechar a janela, draggable = arrastar a janela, resizable= nao pode redimensionar, modal= permiti que so edite na modal, nao seleciona campos externos, appendTo= so permite editar o dialogo quanso solicitado, @body = dialogo independente -->
+			<h:form id="frmFabNovo">
+				<h:panelGrid id="pnlFabNovo" columns="2">
+					<p:outputLabel for="txtDescFabNovo" value="Descrição: " /><!-- o que aparece -->
+					
+					<p:inputText id="txtDescFabNovo" size="30" maxlength="50"
+						value="#{MBFabricante.fabricante.descricao}" required="true"  
+						requiredMessage="O Campo descrição é de preenchimento obrigatório!"/><!-- o que o usuario digita, mapeia o managed bean -->
+								
+				</h:panelGrid>
+				
+				<h:panelGrid columns="2">
+					<p:commandButton value="Gravar"
+						actionListener="#{MBFabricante.novo}"
+						oncomplete="verificar(xhr, status, args, 'dlgFabNovo', 'tabelaFabricantes');"
+						update=":frmFabListagem:tblFabricantes :msgGlobal" /><!-- actionListener = invocar metodos de managedBean, upadate = atualizar componentes -->
+					<p:commandButton value="Cancelar" process="@this"
+						onclick="PF('dlgFabNovo').hide();">	
+						<p:resetInput target ="pnlFabNovo" />
+					</p:commandButton> <!-- fecha o botao novo, process="@this" = submete apenas o botao cancelar, evitando validações -->
+				</h:panelGrid>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog widgetVar="dlgFabExcluir" closable = "false"
+					draggable = "false" resizable="false"
+					modal ="true" appendTo="@(body)"
+					header = "Fabricante - Excluir">
+					
+				<h:form id ="frmFabExcluir">
+					<h:panelGrid id="pnlFabExcluir" columns ="2">
+						<h:outputText value = "Código:" />
+						<h:outputText value = "#{MBFabricante.fabricante.codigo}"/>
+						<h:outputText value = "Descrição:" />
+						<h:outputText value = "#{MBFabricante.fabricante.descricao}"/>
+					</h:panelGrid>
+					
+					<h:panelGrid columns = "2">
+						<p:commandButton value = "Excluir" actionListener="#{MBFabricante.excluir}"
+										 oncomplete = "PF ('dlgFabExcluir').hide(); tabelaFabricantes.clearFilters();"
+										 update= ":frmFabListagem:tblFabricantes :msgGlobal"/>
+						<p:commandButton value = "Cancelar" onclick="PF('dlgFabExcluir').hide();" process="@this"/>					
+					</h:panelGrid>
+				</h:form>
+		
+		</p:dialog>
+		
+		<p:dialog widgetVar="dlgFabEditar" closable = "false"
+				  draggable = "false" resizable="false"
+				  modal="true" appendTo="@(body)"
+				  header="Fabricante - Editar">
+		          <h:form id="frmFabEditar">
+		          	<h:panelGrid id = "pnlFabEditar" columns = "2">
+		          		<p:outputLabel value = "Código:" />
+		          		<h:outputText value="#{MBFabricante.fabricante.codigo}" />
+		          		<p:outputLabel for="txtDescFabEditar" value = "Descrição:" />
+		          		<p:inputText id="txtDescFabEditar" value= "#{MBFabricante.fabricante.descricao}" size = "30" maxlength="50"
+		          			required="true" requiredMessage="O campo descrição é de preenchimento obrigatório!"/>
+		          	</h:panelGrid>
+		          	<h:panelGrid columns="2">
+		          		<p:commandButton value = "Editar" actionListener="#{MBFabricante.editar}"
+		          						 oncomplete="verificar(xhr, status, args, 'dlgFabEditar', 'tabelaFabricantes');"
+		          						 update=":frmFabListagem:tblFabricantes :msgGlobal"/>
+		          		
+		          		<p:commandButton value = "Cancelar" onclick="PF('dlgFabEditar').hide();" process="@this">
+		          			<p:resetInput target ="pnlFabEditar" />
+						</p:commandButton>
+		          	
+		          	</h:panelGrid>
+		          </h:form>
+		</p:dialog>
+		
+	</ui:define>
+</ui:composition>
